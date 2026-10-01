@@ -95,6 +95,48 @@ Graphics::Graphics( HWND hWnd )
 	wrl::ComPtr<ID3D11Resource> pBackBuffer;
 	GFX_THROW_INFO( pSwap->GetBuffer( 0,__uuidof(ID3D11Resource),&pBackBuffer ) );
 	GFX_THROW_INFO( pDevice->CreateRenderTargetView( pBackBuffer.Get(),nullptr,&pTarget ) );
+
+	// Create depth stencil state
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; // Check value is written into buffer
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS; // Only objects < other object depth
+	wrl::ComPtr<ID3D11DepthStencilState> pDSState;
+	GFX_THROW_INFO(pDevice->CreateDepthStencilState(&dsDesc, &pDSState));
+
+	// Bind stencil state
+	pContext->OMSetDepthStencilState(pDSState.Get(), 1u);
+
+	// Create stencil texture
+	wrl::ComPtr<ID3D11Texture2D> pDepthStencil;
+	D3D11_TEXTURE2D_DESC descDepth = {}; 
+	// These should match the swap chain
+	descDepth.Width = 800u;
+	descDepth.Height = 600u;
+	descDepth.MipLevels = 1u;
+	descDepth.ArraySize = 1u;
+	// Set the format of each elemenet in the texture
+	descDepth.Format = DXGI_FORMAT_D32_FLOAT;
+	// Anti-aliasing processing (don't worry about this for now)
+	descDepth.SampleDesc.Count = 1u;
+	descDepth.SampleDesc.Quality = 0u;
+	descDepth.Usage = D3D11_USAGE_DEFAULT;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+	GFX_THROW_INFO(pDevice->CreateTexture2D(&descDepth, nullptr, &pDepthStencil));
+
+	// Create view of depth stencil texture
+	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+	descDSV.Format = DXGI_FORMAT_D32_FLOAT;
+	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D; // Initialise as a 2D texture
+	descDSV.Texture2D.MipSlice = 0u;
+
+	GFX_THROW_INFO(pDevice->CreateDepthStencilView(
+		pDepthStencil.Get(), &descDSV, &pDSV
+	));
+
+	// Bind depth stencil view into output merger
+	pContext->OMSetRenderTargets(1u, pTarget.GetAddressOf(), pDSV.Get());
 }
 
 void Graphics::EndFrame()
@@ -120,6 +162,8 @@ void Graphics::ClearBuffer( float red,float green,float blue ) noexcept
 {
 	const float color[] = { red,green,blue,1.0f };
 	pContext->ClearRenderTargetView( pTarget.Get(),color );
+	// We now also need to clear the depth stencil view
+	pContext->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0u);
 }
 
 // Understanding how to render the pipeline rn
@@ -338,12 +382,6 @@ void Graphics::DrawTestTriangle(float angle, float x, float z)
 
 	// Bind input layout
 	pContext->IASetInputLayout(pInputLayout.Get()); // .Get() returns the raw pointer
-
-	// Bind render target
-	// Note that getting the address of pTarget allows us
-	// to get the address without freeing the interface
-	// Address is need when getting the parameter of a pointer to a pointer
-	pContext->OMSetRenderTargets(1u, pTarget.GetAddressOf(), nullptr);
 
 	// Set primitive technology to set up triangle list (group of 3 vertices)
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
