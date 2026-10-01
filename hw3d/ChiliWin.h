@@ -19,6 +19,21 @@
 ******************************************************************************************/
 #pragma once
 
+// ====================================================================================
+// ChiliWin.h
+//
+// This header centralises a few Windows-specific defines and includes used by the
+// tutorial. It configures the minimum supported Windows version and reduces
+// the amount of stuff included from the Windows headers to speed up compile
+// times and avoid naming collisions.
+//
+// Notes for beginners:
+// - `_WIN32_WINNT` tells the Windows headers which API version to expose.
+// - The many `NO*` macros prevent rarely-used parts of the Win32 API from
+//   being included. If you get build errors because something is missing,
+//   consider removing some of the `NO*` macros.
+// ====================================================================================
+
 // target Windows 7 or later
 #define _WIN32_WINNT 0x0601
 #include <sdkddkver.h>

@@ -26,7 +26,20 @@
 #include <optional>
 #include <memory>
 
-
+// ====================================================================================
+// Window
+//
+// This class wraps Win32 window creation and message handling. It holds
+// instances of `Keyboard` and `Mouse` which are updated in response to
+// Win32 input messages. It also owns a `Graphics` object used to render to
+// the window's back buffer.
+//
+// For beginners:
+// - `ProcessMessages()` pumps OS messages and should be called in the main
+//   loop. It returns an optional exit code when the application should quit.
+// - The `Window` class contains a small singleton `WindowClass` that registers
+//   the window class with the OS and unregisters it when the program exits.
+// ====================================================================================
 class Window
 {
 public:

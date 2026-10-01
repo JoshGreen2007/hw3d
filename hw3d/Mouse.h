@@ -21,6 +21,19 @@
 #pragma once
 #include <queue>
 
+// ====================================================================================
+// Mouse
+//
+// Small helper wrapper around basic mouse input. The `Window` class calls the
+// private On* methods in response to Win32 mouse messages (move, button presses,
+// wheel) and the rest of the program can poll for mouse events via `Read()`.
+//
+// For beginners:
+// - GetPos/GetPosX/GetPosY return the last known cursor position relative to
+//   the window's client area.
+// - `Read()` returns queued mouse events produced by the OS. Use `IsEmpty()` to
+//   check whether there are pending events.
+// ====================================================================================
 class Mouse
 {
 	friend class Window;

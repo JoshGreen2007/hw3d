@@ -18,6 +18,11 @@
  *	You should have received a copy of the GNU General Public License					  *
  *	along with The Chili DirectX Framework.  If not, see <http://www.gnu.org/licenses/>.  *
  ******************************************************************************************/
+// Mouse.cpp
+// Implementation of the Mouse helper. This file receives notifications from
+// the Window when mouse-related Win32 messages arrive and stores them in an
+// internal queue so the rest of the program can poll for mouse events.
+
 #include "Mouse.h"
 #include <Windows.h>
 
@@ -75,6 +80,8 @@ void Mouse::OnMouseMove( int newx,int newy ) noexcept
 	x = newx;
 	y = newy;
 
+	// Push a Move event onto the queue. The event stores a snapshot of the
+	// mouse state (position and button states) at the time the message arrived.
 	buffer.push( Mouse::Event( Mouse::Event::Type::Move,*this ) );
 	TrimBuffer();
 }
@@ -148,7 +155,7 @@ void Mouse::TrimBuffer() noexcept
 void Mouse::OnWheelDelta( int x,int y,int delta ) noexcept
 {
 	wheelDeltaCarry += delta;
-	// generate events for every 120 
+	// generate events for every WHEEL_DELTA (usually 120) carried
 	while( wheelDeltaCarry >= WHEEL_DELTA )
 	{
 		wheelDeltaCarry -= WHEEL_DELTA;

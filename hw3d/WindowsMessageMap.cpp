@@ -22,6 +22,11 @@
 #include <sstream>
 #include <iomanip>
 
+// WindowsMessageMap.cpp
+// Utility implementation that maps Win32 message constants to readable
+// string names. This is mainly for debugging and makes output easier to read
+// when logging window messages.
+
 // secret messages
 #define WM_UAHDESTROYWINDOW 0x0090
 #define WM_UAHDRAWMENU 0x0091

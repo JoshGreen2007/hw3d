@@ -1,15 +1,9 @@
-//--------------------------------------------------------------------------------------
-// File: DXErr.cpp
-//
-// DirectX Error Library
-//
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
-//--------------------------------------------------------------------------------------
+// dxerr.cpp
+// Helper implementation for turning DirectX HRESULT values into readable
+// strings and for tracing errors to the debugger output. The implementation
+// is derived from Microsoft's sample code and is used by the tutorial to
+// present nicer error messages during development.
+
 #include "dxerr.h"
 
 #include <stdio.h>
@@ -33,6 +27,8 @@
 #include <dwrite.h>
 #endif
 
+// A bunch of specific HRESULT constants used by the sample code. They map
+// to readable names below in the helper functions.
 #define XAUDIO2_E_INVALID_CALL          0x88960001
 #define XAUDIO2_E_XMA_DECODER_ERROR     0x88960002
 #define XAUDIO2_E_XAPO_CREATION_FAILED  0x88960003

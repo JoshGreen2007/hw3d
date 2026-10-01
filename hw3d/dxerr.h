@@ -1,19 +1,21 @@
-//--------------------------------------------------------------------------------------
-// File: DXErr.h
-//
-// DirectX Error Library
-//
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
-//--------------------------------------------------------------------------------------
-
 #pragma once
 #include "ChiliWin.h"
 #include <sal.h>
+
+// ====================================================================================
+// dxerr.h
+//
+// A small compatibility header that exposes helper functions for converting
+// and printing DirectX `HRESULT` error codes. The original Microsoft sample
+// provides these helpers; they are included here so tutorial code can emit
+// readable error messages instead of numeric codes.
+//
+// For beginners:
+// - `DXGetErrorString` returns a short symbolic name for an HRESULT.
+// - `DXGetErrorDescription` writes a human-readable description into a buffer.
+// - `DXTrace` can be used to print a formatted error message to the debug
+//   output window and optionally show a message box.
+// ====================================================================================
 
 #ifdef __cplusplus
 extern "C" {

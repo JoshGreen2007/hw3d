@@ -21,10 +21,25 @@
 #include <queue>
 #include <bitset>
 
+// The Keyboard class provides a small abstraction over raw Win32 keyboard
+// messages. The Window class is a friend and calls the private On* methods
+// when the corresponding Win32 messages arrive (WM_KEYDOWN, WM_KEYUP, WM_CHAR).
+//
+// The application code should generally not call the private methods; instead
+// poll for input using the public API:
+// - `KeyIsPressed(code)` to query the instantaneous state of a key.
+// - `ReadKey()` to retrieve the next key-related event (press/release).
+// - `ReadChar()` to retrieve the next character input (text input) event.
+//
+// The class keeps internal fixed-size queues for events so that input can be
+// buffered between frames without using unbounded memory.
 class Keyboard
 {
 	friend class Window;
 public:
+    // Event describes a single key press or release. It stores a tiny enum
+	// describing the event type and the virtual-key code. This is convenient
+	// for game input where you only care about press/release transitions.
 	class Event
 	{
 	public:

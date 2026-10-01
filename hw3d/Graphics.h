@@ -1,4 +1,23 @@
 #pragma once
+// ====================================================================================
+// Graphics.h
+//
+// High-level overview for beginners:
+// This header declares the `Graphics` class which is responsible for initializing
+// Direct3D 11, holding the device/context/swapchain objects, and providing a few
+// simple drawing utilities used by the tutorial (clearing the screen, ending the
+// frame, and drawing a test object).
+//
+// Key concepts:
+// - `ID3D11Device` creates GPU resources (buffers, shaders, views).
+// - `ID3D11DeviceContext` records commands that the GPU will execute.
+// - `IDXGISwapChain` holds the back buffer(s) that are presented to the screen.
+// - A "render target view" (`ID3D11RenderTargetView`) is used to bind the back
+//   buffer so the GPU can render into it.
+//
+// The nested exception classes give you helpful, human-readable error messages
+// if something goes wrong when calling D3D functions.
+// ====================================================================================
 #include "ChiliWin.h"
 #include "ChiliException.h"
 #include <d3d11.h>

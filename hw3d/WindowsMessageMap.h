@@ -22,10 +22,18 @@
 #include "ChiliWin.h"
 #include <string>
 
+// ====================================================================================
+// WindowsMessageMap
+//
+// Small utility that provides human-readable names for common Win32 message
+// codes. Useful when debugging message handling to print the message name
+// rather than a numeric code.
+// ====================================================================================
 class WindowsMessageMap
 {
 public:
 	WindowsMessageMap() noexcept;
+	// Returns a human-readable string for a given message code and parameters.
 	std::string operator()( DWORD msg,LPARAM lp,WPARAM wp ) const noexcept;
 private:
 	std::unordered_map<DWORD,std::string> map;

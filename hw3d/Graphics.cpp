@@ -1,5 +1,26 @@
 #include "Graphics.h"
 #include "dxerr.h"
+// ====================================================================================
+// Graphics.cpp
+//
+// Beginner-friendly notes:
+// This file contains the implementation of the `Graphics` class declared in
+// `Graphics.h`. The Graphics class sets up Direct3D 11 (device, swap chain,
+// device context and render target) and provides simple drawing helpers used
+// by the tutorial. When you call `DrawTestTriangle` or `DrawIndexed`, the code
+// prepares GPU resources (vertex/index buffers, shaders, input layouts, etc.)
+// and issues draw calls via the device context.
+//
+// Important points for beginners:
+// - The device is used to create GPU resources; the context is used to bind
+//   those resources and issue draw calls.
+// - Shaders (vertex/pixel) transform vertices and compute final pixel colors.
+// - Constant buffers are how you send small bits of data (e.g. transform
+//   matrices) from CPU code to the shaders.
+// - If you see nothing on screen (black), check shader compilation/binding,
+//   input layout, vertex format and whether the transform sends geometry
+//   into the viewable clip space.
+// ====================================================================================
 #include <sstream>
 #include <d3dcompiler.h>
 #include <cmath>
@@ -143,7 +164,9 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 		{  1.0f,  1.0f,  1.0f,		255, 255, 255, 255 }, 
 	};
 
-	// Creating pos and color structs allowing external access
+  // Creating pos and color structs allowing external access
+	// (This line is just an example of how to mutate the vertex array after
+	//  creation. The green channel for the first vertex will be 255.)
 	vertices[0].color.g = 255;
 
 	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
@@ -158,13 +181,21 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	sd.pSysMem = vertices;
 	GFX_THROW_INFO( pDevice->CreateBuffer( &bd,&sd,&pVertexBuffer ) );
 
-	// Bind vertex buffer to pipeline
+   // Bind vertex buffer to pipeline
+	// Explanation for beginners:
+	// - The IA (Input Assembler) stage reads vertex data from bound vertex
+	//   buffers. `stride` is the size (in bytes) of a single vertex structure.
+	// - `offset` is the byte offset into the buffer where vertex data begins
+	//   (usually 0 when using a single interleaved buffer).
 	const UINT stride = sizeof( Vertex );
 	const UINT offset = 0u;
 	pContext->IASetVertexBuffers( 0u,1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
 
-	// Create index buffer - 16 bytes
-	// We esentially initialize which vertex the index should go to
+   // Create index buffer - the index buffer tells the GPU which vertices form
+	// triangles. Using an index buffer avoids duplicating vertex data when the
+	// same vertex is referenced by multiple triangles.
+	// For beginners: indices are small integers (here `unsigned short`) that
+	// reference vertices in the currently bound vertex buffer.
 	const unsigned short indices[] =
 	{
 		0, 2, 1,  2, 3, 1,
@@ -188,43 +219,51 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	isd.pSysMem = indices;
 	GFX_THROW_INFO(pDevice->CreateBuffer(&ibd, &isd, &pIndexBuffer));
 
-	// Create pixel shader
+  // Create pixel shader
+	// The pixel shader is loaded from a compiled .cso file and will be called
+	// for every pixel covered by a triangle. It receives interpolated inputs
+	// from the vertex shader (for example, per-vertex color) and outputs the
+	// final pixel color.
 	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
 	wrl::ComPtr<ID3DBlob> pBlob;
 	GFX_THROW_INFO(D3DReadFileToBlob(L"PixelShader.cso", &pBlob)); // Reads .cso file and stores it as binary data
 	GFX_THROW_INFO(pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pPixelShader));
 
-	// Bind index buffer
+    // Bind index buffer
+	// After binding an index buffer, DrawIndexed() will read indices from it
+	// rather than using a sequential list of vertices. The index format
+	// `DXGI_FORMAT_R16_UINT` matches our `unsigned short` index type.
 	pContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
-	// Create constant buffer for transformation matrix
-	struct ConstantBuffer 
+    // Create constant buffer for transformation matrix
+	// Older tutorial code used a plain float[4][4] which is straightforward
+	// to upload to the GPU. Build the full transformation using DirectXMath
+	// and then store it into an XMFLOAT4X4 which can be passed as initial
+	// subresource data when creating the constant buffer.
+	struct ConstantBuffer
 	{
-		// Replace 2x2 array with DirectXMath
-		// This is a floating point 4x4 matrix, however we don't access it directly
-		dx::XMMATRIX transform;
-	};
-	const ConstantBuffer cb =
-	{
-		{
-			// Note that hlsl defaults to a column matrix, so we tell it its a row matrix
-			dx::XMMatrixTranspose
-			(
-				// Remember the multiplication order matters
-				dx::XMMatrixRotationZ(angle) *
-				dx::XMMatrixRotationX(angle)*
-				// Use the passed-in mouse coordinates for translation
-				// We move z-axis back so we can see the cube better
-				dx::XMMatrixTranslation(x, y, 4.0f) *
-				dx::XMMatrixPerspectiveLH(1.0f, (3.0f / 4.0f), 0.5f, 10.0f)
-			)
-		}
+		float transform[4][4];
 	};
 
+	// Build transformation: model rotations * translation * projection
+	const dx::XMMATRIX matt =
+		dx::XMMatrixRotationZ(angle) *
+		dx::XMMatrixRotationX(angle) *
+		dx::XMMatrixTranslation(x, y, 4.0f) *
+		dx::XMMatrixPerspectiveLH(1.0f, (3.0f / 4.0f), 0.5f, 10.0f);
+
+	const dx::XMMATRIX m = dx::XMMatrixTranspose( matt ); // transpose for HLSL
+
+	dx::XMFLOAT4X4 xm;
+	dx::XMStoreFloat4x4(&xm, m);
+
+	// Copy XMFLOAT4X4 into our constant buffer POD
+	ConstantBuffer cb;
+	memcpy(&cb.transform, &xm, sizeof(cb.transform));
 
 	// Create constant buffer resource
 	wrl::ComPtr<ID3D11Buffer> pConstantBuffer;
-    D3D11_BUFFER_DESC cbd;
+	D3D11_BUFFER_DESC cbd;
 	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	// We supply initial data each frame when creating the buffer, so use DYNAMIC
 	cbd.Usage = D3D11_USAGE_DYNAMIC;
@@ -238,6 +277,31 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 
     // Bind constant buffer to vertex shader
 	pContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
+
+	// This contains a buffer of the colour channels
+	struct ConstantBuffer2
+	{
+		struct
+		{
+			float r;
+			float g;
+			float b;
+			float a;
+		} face_colors[6];
+	};
+
+	// These are the triangle colours
+	const ConstantBuffer2 cb2 =
+	{
+		{
+			{1.0f, 0.0f, 1.0f},
+			{1.0f, 0.0f, 0.0f},
+			{0.0f, 1.0f, 0.0f},
+			{0.0f, 0.0f, 1.0f},
+			{1.0f, 1.0f, 0.0f},
+			{0.0f, 1.0f, 1.0f},
+		}
+	};
 
 	// Bind pixel shader
 	pContext->PSSetShader(pPixelShader.Get(), 0, 0);
@@ -255,9 +319,9 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
-		{"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		// We offset by 8 bytes as this is where the colour element starts
-		{"Color", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 8u, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"Color", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 12u, D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 
 	// Create input layout

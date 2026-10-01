@@ -21,18 +21,42 @@
 #include <exception>
 #include <string>
 
+// ====================================================================================
+// ChiliException
+//
+// This is a small helper exception class used throughout the tutorial code to
+// carry file/line information and to provide readable error messages. It
+// derives from std::exception so it can be used in try/catch blocks normally.
+//
+// For beginners:
+// - `GetOriginString()` returns a short string like "(filename.cpp:123)"
+//   describing where the exception was created.
+// - `what()` returns a complete human-readable string that includes the
+//   exception type and the origin string.
+// ====================================================================================
 class ChiliException : public std::exception
 {
 public:
+	// Construct with the source code line and file where the exception was thrown
 	ChiliException( int line,const char* file ) noexcept;
+
+	// Standard exception message getter. Implementations return a readable
+	// message that includes the type and the origin (file:line).
 	const char* what() const noexcept override;
+
+	// Returns a short type string such as "Chili Exception"
 	virtual const char* GetType() const noexcept;
+
+	// Accessors for the saved source location
 	int GetLine() const noexcept;
 	const std::string& GetFile() const noexcept;
+
+	// Builds a small origin string combining file and line.
 	std::string GetOriginString() const noexcept;
+
 private:
-	int line;
-	std::string file;
+	int line;              // source line where exception was created
+	std::string file;      // source filename
 protected:
-	mutable std::string whatBuffer;
+	mutable std::string whatBuffer; // storage for the `what()` C-string
 };

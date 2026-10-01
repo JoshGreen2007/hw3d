@@ -17,6 +17,10 @@
 *	You should have received a copy of the GNU General Public License					  *
 *	along with The Chili Direct3D Engine.  If not, see <http://www.gnu.org/licenses/>.    *
 ******************************************************************************************/
+// WinMain.cpp
+// The application entry point. Creates an App instance and runs the main loop
+// while catching and reporting any exceptions that escape the application.
+
 #include "App.h"
 
 
@@ -28,10 +32,12 @@ int CALLBACK WinMain(
 {
 	try
 	{
+		// Construct a temporary App and run it. The App owns the main loop.
 		return App{}.Go();
 	}
 	catch( const ChiliException& e )
 	{
+		// Show a message box with details when a ChiliException occurs.
 		MessageBox( nullptr,e.what(),e.GetType(),MB_OK | MB_ICONEXCLAMATION );
 	}
 	catch( const std::exception& e )

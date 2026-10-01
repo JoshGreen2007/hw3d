@@ -17,6 +17,12 @@
 *	You should have received a copy of the GNU General Public License					  *
 *	along with The Chili Direct3D Engine.  If not, see <http://www.gnu.org/licenses/>.    *
 ******************************************************************************************/
+// ChiliException.cpp
+// Implementation of the simple ChiliException helper. This file implements
+// the methods declared in ChiliException.h. The class exists to provide
+// nicer error messages during development and to carry file/line information
+// where the exception was thrown.
+
 #include "ChiliException.h"
 #include <sstream>
 
@@ -27,6 +33,9 @@ ChiliException::ChiliException( int line,const char* file ) noexcept
 	file( file )
 {}
 
+// `what()` builds a single std::string with useful information and returns
+// a pointer to the internal buffer. This is the string that will be shown
+// if the exception is printed or caught and logged.
 const char* ChiliException::what() const noexcept
 {
 	std::ostringstream oss;
@@ -36,6 +45,8 @@ const char* ChiliException::what() const noexcept
 	return whatBuffer.c_str();
 }
 
+// A short type name for this class. Override this in derived exception
+// classes to provide more specific type information.
 const char* ChiliException::GetType() const noexcept
 {
 	return "Chili Exception";
@@ -51,6 +62,8 @@ const std::string& ChiliException::GetFile() const noexcept
 	return file;
 }
 
+// Build a compact origin string that includes the file and line number. This
+// helps to quickly identify where an exception was created.
 std::string ChiliException::GetOriginString() const noexcept
 {
 	std::ostringstream oss;

@@ -21,6 +21,12 @@
 #include <sstream>
 #include "resource.h"
 
+// Window.cpp
+// Implements the Window class which registers a Win32 window class, creates
+// a window, processes OS messages, and forwards input messages to the
+// Keyboard and Mouse helpers. The file also contains small helper exception
+// classes used to represent Win32 errors.
+
 
 // Window Class Stuff
 Window::WindowClass Window::WindowClass::wndClass;
@@ -100,6 +106,13 @@ Window::Window( int width,int height,const char* name )
 	// create graphics object
 	pGfx = std::make_unique<Graphics>( hWnd );
 }
+
+// Notes for beginners:
+// - `CreateWindow` takes a pointer to `this` as the last parameter. That
+//   pointer becomes available to the Window instance during the WM_NCCREATE
+//   message and allows us to associate the Win32 window with the C++ object.
+// - The Window constructor also creates the `Graphics` object which sets up
+//   the Direct3D device and swap chain bound to this window.
 
 Window::~Window()
 {
@@ -211,6 +224,15 @@ LRESULT Window::HandleMsg( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noex
 		// in client region -> log move, and log enter + capture mouse (if not previously in window)
 		if( pt.x >= 0 && pt.x < width && pt.y >= 0 && pt.y < height )
 		{
+         // Explanation:
+			// - When the mouse is inside the client area we generate a Move event
+			//   and, if this is the first time we've detected the cursor inside the
+			//   window, we call SetCapture so that we continue to receive mouse
+			//   messages even if the cursor drifts outside while a button is down.
+			// - `MAKEPOINTS(lParam)` unpacks the x/y coordinates sent by Windows
+			//   into a POINTS struct which has `x` and `y` members.
+			// - Note that Windows reports coordinates relative to the client area
+			//   (top-left = 0,0) which is convenient for rendering.
 			mouse.OnMouseMove( pt.x,pt.y );
 			if( !mouse.IsInWindow() )
 			{
