@@ -48,6 +48,12 @@ void App::DoFrame()
 		-wnd.mouse.GetPosY() / 300.0f + 1.0f // normalized Y in [-1,+1], inverted
 	);
 
+	wnd.Gfx().DrawTestTriangle
+	(
+		-timer.Peek(),
+		0.0f, 
+		0.0f
+	);
 	// Present what we've drawn this frame to the screen
 	wnd.Gfx().EndFrame();
 }

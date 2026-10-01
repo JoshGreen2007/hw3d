@@ -142,32 +142,21 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 			float z;
 		} pos;
 
-		struct
-		{
-			unsigned char r;
-			unsigned char g;
-			unsigned char b;
-			unsigned char a;
-		} color;
+		// We no longer need to pass in color per vertex
 	};
 
 	// create vertex buffer (1 2d triangle at center of screen)
     Vertex vertices[] =
 	{
-		{ -1.0f, -1.0f, -1.0f,		255, 0,   0,   255 },
-		{  1.0f, -1.0f, -1.0f,		0,   255, 0,   255 },
-		{ -1.0f,  1.0f, -1.0f,		0,   0,   255, 255 },
-		{  1.0f,  1.0f, -1.0f,		255, 255, 0,   255 },
-		{ -1.0f, -1.0f,  1.0f,		255, 0,   255, 255 },
-		{  1.0f, -1.0f,  1.0f,		0,   0,   0,   255 },
-		{ -1.0f,  1.0f,  1.0f,		0,   0,   0,   255 },
-		{  1.0f,  1.0f,  1.0f,		255, 255, 255, 255 }, 
+		{ -1.0f, -1.0f, -1.0f },
+		{  1.0f, -1.0f, -1.0f },
+		{ -1.0f,  1.0f, -1.0f },
+		{  1.0f,  1.0f, -1.0f },
+		{ -1.0f, -1.0f,  1.0f },
+		{  1.0f, -1.0f,  1.0f },
+		{ -1.0f,  1.0f,  1.0f },
+		{  1.0f,  1.0f,  1.0f }, 
 	};
-
-  // Creating pos and color structs allowing external access
-	// (This line is just an example of how to mutate the vertex array after
-	//  creation. The green channel for the first vertex will be 255.)
-	vertices[0].color.g = 255;
 
 	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
 	D3D11_BUFFER_DESC bd = {};
@@ -303,8 +292,25 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 		}
 	};
 
+	// Create constant buffer resource (colour)
+	wrl::ComPtr<ID3D11Buffer> pConstantBuffer2;
+	D3D11_BUFFER_DESC cbd2;
+	cbd2.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbd2.Usage = D3D11_USAGE_DEFAULT;
+	cbd2.CPUAccessFlags = 0u;
+	cbd2.MiscFlags = 0u;
+	cbd2.ByteWidth = sizeof(cb2);
+	cbd2.StructureByteStride = 0u;
+	D3D11_SUBRESOURCE_DATA csd2 = {};
+	csd2.pSysMem = &cb2;
+	GFX_THROW_INFO(pDevice->CreateBuffer(&cbd2, &csd2, &pConstantBuffer2));
+
 	// Bind pixel shader
 	pContext->PSSetShader(pPixelShader.Get(), 0, 0);
+
+	// Bind colour constant buffer to pixel shader (slot b0)
+	// Pixel shader expects a cbuffer with face colors; ensure it's bound
+	pContext->PSSetConstantBuffers(0u, 1u, pConstantBuffer2.GetAddressOf());
 
 	// Create vertex shader
 	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
@@ -319,9 +325,7 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
-		{"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		// We offset by 8 bytes as this is where the colour element starts
-		{"Color", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 12u, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0}
 	};
 
 	// Create input layout

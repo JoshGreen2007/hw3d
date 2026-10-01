@@ -10,8 +10,15 @@
 // - Inputs to the pixel shader are interpolated across the primitive by the
 //   GPU automatically (so per-vertex colors produce smooth gradients).
 
-float4 main(float3 color : Color) : SV_TARGET
+// Add buffer for color faces
+cbuffer cbuf
 {
-	// Return the interpolated color with full opacity (alpha = 1.0)
-	return float4(color, 1.0f);
+    float4 face_colors[6];
+};
+
+// Since we no longer need color input (the buffer handles it now), we instead pass in triangleID
+// We divide by 2 because there are 2 triangles on every face on the cube
+float4 main(uint triangleID : SV_PrimitiveID) : SV_TARGET
+{
+    return face_colors[triangleID / 2];
 }

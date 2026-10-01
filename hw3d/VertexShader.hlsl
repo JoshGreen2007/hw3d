@@ -10,12 +10,6 @@
 // - Any additional per-vertex data (like color) can be passed through to the
 //   pixel shader by adding fields to the output structure.
 
-struct VSOut
-{
-    float3 color : Color;    // per-vertex color forwarded to pixel shader
-    float4 pos : SV_Position; // transformed clip-space position
-};
-
 cbuffer CBuf
 {
     // The shader receives a 4x4 transformation matrix. This can encode
@@ -24,14 +18,10 @@ cbuffer CBuf
     matrix transform;
 };
 
-// Vertex shader entry point. Accepts a position (float3) and a color, then
-// outputs a transformed position and the same color for interpolation.
-VSOut main( float3 pos : Position, float3 color : Color )
+// Vertex shader entry point. Accepts a position (float3), then
+// outputs a transformed position
+float4 main( float3 pos : Position) : SV_Position
 {
-    VSOut vso;
-    // Transform the position into clip space. We put the position into a
-    // float4 with w = 1.0 so translation components in the matrix are applied.
-    vso.pos = mul(float4(pos, 1.0f), transform);
-    vso.color = color; // pass-through color to the pixel shader
-    return vso;
+    // Here we return the homogeneus coordinates
+    return mul(float4(pos, 1.0f), transform);
 }
