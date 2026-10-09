@@ -19,6 +19,7 @@
 ******************************************************************************************/
 #pragma once
 #include <unordered_map>
+#include <string>
 #include "ChiliWin.h"
 
 class WindowsMessageMap

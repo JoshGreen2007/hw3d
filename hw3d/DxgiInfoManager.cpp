@@ -5,6 +5,7 @@
 #include <memory>
 #include "GraphicsThrowMacros.h"
 #include "WindowsThrowMacros.h"
+#include <string>
 
 #pragma comment(lib, "dxguid.lib")
 
