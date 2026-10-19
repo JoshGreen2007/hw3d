@@ -84,6 +84,8 @@ Box::Box( Graphics& gfx,
 	AddBind( std::make_unique<TransformCbuf>( gfx,*this ) );
 	
 	// model deformation transform (per instance, not stored as bind)
+	// this stores the actual transform with other transforms, instead of a new definition each time
+	// and also saves space as we only need 3x3 matrices and not 4x4
 	dx::XMStoreFloat3x3(
 		&mt,
 		dx::XMMatrixScaling( 1.0f,1.0f,bdist( rng ) )
@@ -100,6 +102,7 @@ void Box::Update( float dt ) noexcept
 	chi += dchi * dt;
 }
 
+// Transform per object
 DirectX::XMMATRIX Box::GetTransformXM() const noexcept
 {
 	namespace dx = DirectX;

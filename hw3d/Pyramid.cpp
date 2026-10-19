@@ -1,7 +1,7 @@
 #include "Pyramid.h"
 #include "BindableBase.h"
 #include "GraphicsThrowMacros.h"
-#include "Cone.h"
+#include "Cone.h" // Takes cone and redraws it to match
 
 
 Pyramid::Pyramid( Graphics& gfx,
